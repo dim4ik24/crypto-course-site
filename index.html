@@ -622,6 +622,60 @@
             color: #4ecdc4;
         }
 
+        /* Access Code Modal */
+        .access-code-modal .modal-content {
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .access-code {
+            background: linear-gradient(135deg, #4ecdc4 0%, #20b2aa 100%);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .copy-button {
+            background: linear-gradient(135deg, #4ecdc4 0%, #20b2aa 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .telegram-button {
+            background: linear-gradient(135deg, #0088cc 0%, #0077b3 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .telegram-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3);
+        }
+
         /* Cookie banner */
         .cookie-banner {
             position: fixed;
@@ -1030,6 +1084,34 @@
         </div>
     </footer>
 
+    <!-- Access Code Modal -->
+    <div id="accessCodeModal" class="modal access-code-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('accessCodeModal')">&times;</span>
+            <h3>🎉 Вітаємо! Ваш код доступу готовий</h3>
+            
+            <p>Скопіюйте код нижче і перейдіть до нашого Telegram бота:</p>
+            
+            <div class="access-code" id="accessCodeText">CRYPTA_Z_NULYA</div>
+            
+            <button class="copy-button" onclick="copyAccessCode()">📋 Скопіювати код</button>
+            
+            <br><br>
+            
+            <p>Тепер перейдіть до бота і введіть цей код:</p>
+            
+            <a href="https://t.me/KriptaZNulyaBot" class="telegram-button" target="_blank">
+                🤖 Перейти до Telegram бота
+            </a>
+            
+            <br><br>
+            
+            <p style="font-size: 0.9rem; color: #aaa;">
+                Після переходу до бота, просто надішліть йому скопійований код і отримайте доступ до курсу!
+            </p>
+        </div>
+    </div>
+
     <!-- Privacy Policy Modal -->
     <div id="privacyModal" class="modal">
         <div class="modal-content">
@@ -1113,18 +1195,19 @@
     <script>
         // Cookie banner functionality
         function showCookieBanner() {
-            if (!localStorage.getItem('cookiesAccepted')) {
+            const cookiesAccepted = sessionStorage.getItem('cookiesAccepted');
+            if (!cookiesAccepted) {
                 document.getElementById('cookieBanner').style.display = 'block';
             }
         }
 
         function acceptCookies() {
-            localStorage.setItem('cookiesAccepted', 'true');
+            sessionStorage.setItem('cookiesAccepted', 'true');
             document.getElementById('cookieBanner').style.display = 'none';
         }
 
         function declineCookies() {
-            localStorage.setItem('cookiesAccepted', 'false');
+            sessionStorage.setItem('cookiesAccepted', 'false');
             document.getElementById('cookieBanner').style.display = 'none';
         }
 
@@ -1147,10 +1230,72 @@
             });
         }
 
-        // Course registration
+        // Course registration - show access code modal
         function registerForCourse() {
-            // TODO: Integrate with Telegram bot when ready
-            alert('Телеграм бот для реєстрації ще в розробці. Будь ласка, зв\'яжіться з нами через контакти для отримання курсу.');
+            openModal('accessCodeModal');
+        }
+
+        // Copy access code to clipboard
+        function copyAccessCode() {
+            const accessCode = document.getElementById('accessCodeText').textContent;
+            
+            // Try to use the modern clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(accessCode).then(function() {
+                    // Show success message
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = '✅ Скопійовано!';
+                    button.style.background = '#4CAF50';
+                    
+                    setTimeout(function() {
+                        button.textContent = originalText;
+                        button.style.background = '';
+                    }, 2000);
+                }).catch(function(err) {
+                    console.error('Could not copy text: ', err);
+                    fallbackCopyTextToClipboard(accessCode);
+                });
+            } else {
+                // Fallback for older browsers
+                fallbackCopyTextToClipboard(accessCode);
+            }
+        }
+
+        // Fallback function for copying text (for older browsers)
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = '✅ Скопійовано!';
+                    button.style.background = '#4CAF50';
+                    
+                    setTimeout(function() {
+                        button.textContent = originalText;
+                        button.style.background = '';
+                    }, 2000);
+                } else {
+                    alert('Не вдалося скопіювати код. Будь ласка, скопіюйте його вручну: ' + text);
+                }
+            } catch (err) {
+                alert('Не вдалося скопіювати код. Будь ласка, скопіюйте його вручну: ' + text);
+            }
+
+            document.body.removeChild(textArea);
         }
 
         // Initialize
